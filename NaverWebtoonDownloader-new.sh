@@ -16,16 +16,18 @@ export folder="${4}"
 export foldername_autogen="${5}"
 export pdf="${6}"
 export compress="${7}"
-#if [[ -z ${begin} ]]; then
-#	export begin="1"
-#fi
-# retrieve end
+
 if [[ ${end} == "end" ]]; then
-	export end=$(wget -qO- "https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}" | grep "/webtoon/detail.nhn?titleId=${titleid}&no=" | head -n 1 | sed 's/<a href="\/webtoon\/detail.nhn?//' | sed 's/titleId.*&no=//' | sed 's/&weekday.*//' | sed 's/^[ \t]*//')
-	#	echo "${end}"
+	export end=$(wget -qO- "https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}" \
+	| grep "/webtoon/detail.nhn?titleId=${titleid}&no=" \
+	| head -n 1 | sed 's/<a href="\/webtoon\/detail.nhn?//' \
+	| sed 's/titleId.*&no=//' \
+	| sed 's/&weekday.*//' \
+	| sed 's/^[ \t]*//')
 fi
 # make folder
-export name=$(wget -qO- 'https://comic.naver.com/webtoon/list.nhn?titleId='"${titleid}" | perl -l -0777 -ne 'print $1 if /<title.*?>\s*(.*?)(?: :: 네이버 만화)?\s*<\/title/si')
+export name=$(wget -qO- 'https://comic.naver.com/webtoon/list.nhn?titleId='"${titleid}" \
+| perl -l -0777 -ne 'print $1 if /<title.*?>\s*(.*?)(?: :: 네이버 만화)?\s*<\/title/si')
 
 if [[ ${foldername_autogen} == 1 ]] && [[ -n "${folder}" ]] && [[ "${folder}" != "default" ]]; then
 	if [[ ${folder} == */ ]]; then
@@ -75,21 +77,26 @@ echo $(date +%c) "create link complete";
 c=${begin};
 while(($c<=${end}));
 do s=1
-	while read p;
-	do wget -U "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0" \
-		-c  --quiet --retry-connrefused --timeout=0.5 --waitretry=0 --tries=30 \
-		-O "$c"-"$s".jpg "$p";
-			((s++));
-		done<"${c}"
-		rm "${c}";
-		echo $(date +%c) "${c}/${end} downloaded"
-		((c++));
-	done;
+wget -U "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0" \
+	--continue \
+	--retry-connrefused \
+	--timeout=0.5 \
+	--waitretry=0 \
+	--tries=30 \
+	-a ./"${name}"-download.log \
+	-i "${c}";
+for m in ./*IMAG*.jpg ;
+do mv "${m}" ${c}-"$(echo "${m}" | sed 's/.*_//g' )"
+done
+rm "${c}";
+echo $(date +%c) "${c}/${end} downloaded";
+((c++));
+done;
 	# padding 0 for numerical file sorting
 	# cut no.
-	for f in *-[0-9].jpg ; 
-	do mv "${f}" "${f/-/-0}"; 
-	done;
+	#for f in *-[0-9].jpg ;
+	#do mv "${f}" "${f/-/-0}";
+	#done;
 	c=${begin};
 	for f in *.jpg;
 	do case $f in
@@ -134,11 +141,11 @@ fi
 echo ====================END====================
 echo end time: "$(date +%c)"
 echo location: "$(pwd)"
-echo webtoon titleID: ${titleid}
+echo webtoon titleID: "${titleid}"
 echo webtoon name: "${name}"
 echo pdf: "${pdf}"
-echo begin point: ${begin}
-echo end: ${end}
-echo compressed: ${compress}
+echo begin point: "${begin}"
+echo end: "${end}"
+echo compressed: "${compress}"
 echo ====================END====================
 exit 0
