@@ -6,17 +6,73 @@
 
 ##help
 if [[ ${1} == "--help" ]] || [[ ${1} == "-h" ]] || [[ -z "${1}" ]]; then
-	echo "usage: Naverwebtoondownloader.sh titleId START END(end) Folder(default) (Foldername_autogen) [PDF] (compress - 0 or 1)";
+	echo "usage: Naverwebtoondownloader.sh -t titleId -b START -e END(end) -l Folder(default) --subfolder --pdf --compress"
+	echo "-t (--titleid) : title ID of the target webtoon."
+	echo "-b (--begin) : beginning point. default : 1"
+	echo "-e (--end) : ending point. Program will find out last chapter no. by default, so you can download from your beginning point to the last one."
+	echo "-l (--location) : location of saved files. Default: current directory, with --subfolder switch on"
+	echo "--subfolder : generate subfolder with the name of the targeted webtoon and save files in that folder."
+	echo "-p (--pdf) : generate pdf using downloaded images. Required : img2pdf."
+	echo "-c (--compress) : generate compressed archive files. Required : 7z (p7zip)"
+	echo "output : ./img/(downloaded webtoon.jpg(s)), ./pdf/(generated pdf(s).pdf), ./(comic name).log (wget log), ../(comic name).7z"
 	exit;
 fi
 
-export titleid="${1}"
-export begin="${2}"
-export end="${3}"
-export folder="${4}"
-export foldername_autogen="${5}"
-export pdf="${6}"
-export compress="${7}"
+
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    -t|--titleID)
+    titleid="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -b|--begin)
+    begin="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -e|--end)
+    end="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -l|--location)
+    folder="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --subfolder)
+    foldername_autogen=1
+    shift
+    shift
+    ;;
+    -p|--pdf)
+    pdf=1
+    shift
+    shift
+    ;;
+    -c|-compress)
+    compress=1
+    shift
+    shift
+    ;;
+    *)    # unknown option
+    echo "Unknown Option: " "$1" # save it in an array for later
+    shift # past argument
+    ;;
+esac
+done
+
+#export titleid="${1}"
+#export begin="${2}"
+#export end="${3}"
+#export folder="${4}"
+#export foldername_autogen="${5}"
+#export pdf="${6}"
+#export compress="${7}"
 
 if [[ ${end} == "end" ]]; then
 end=$(wget -qO- "https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}" \
