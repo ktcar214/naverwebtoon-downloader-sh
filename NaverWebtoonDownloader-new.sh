@@ -74,6 +74,7 @@ done
 #export pdf="${6}"
 #export compress="${7}"
 
+#retrieve end point
 if [[ ${end} == "end" ]]; then
 end=$(wget -qO- "https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}" \
 		| grep "/webtoon/detail.nhn?titleId=${titleid}&no=" \
@@ -83,11 +84,13 @@ end=$(wget -qO- "https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}" 
 		| sed 's/^[ \t]*//')
 export end
 fi
-# make folder
+
+#retrieve the comic title from naver
 name=$(wget -qO- 'https://comic.naver.com/webtoon/list.nhn?titleId='"${titleid}" \
 	| perl -l -0777 -ne 'print $1 if /<title.*?>\s*(.*?)(?: :: 네이버 만화)?\s*<\/title/si')
 export name
 
+#make folder
 if [[ ${foldername_autogen} == 1 ]] && [[ -n "${folder}" ]] && [[ "${folder}" != "default" ]]; then
 	if [[ ${folder} == */ ]]; then
 		mkdir "$folder""$name" 
@@ -104,8 +107,8 @@ else
 	mkdir "$folder" 
 	cd "$folder" || exit
 fi
+
 # download html
-#pwd
 echo ====================BEGIN======================
 echo start time: "$(date +%c)"
 echo location: "$(pwd)"
@@ -116,11 +119,14 @@ echo begin point: "${begin}"
 echo end: "${end}"
 echo compress: "${compress}"
 echo ====================BEGIN======================
+
+#filter comic detail URLs
 c=${begin};
 while((c<=end));
 do echo "https://comic.naver.com/webtoon/detail.nhn?titleId=${titleid}&no=""${c}" >> down.txt;
 	((c++));
 done;
+
 # make download list using sed & grep
 c=${begin};
 while read -r p;
@@ -143,23 +149,25 @@ do wget -U "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:78.0) Gecko/20100101 Fire
 	--tries=30 \
 	-a ./"${name}"-download.log \
 	-i "${c}";
-	for m in ./*IMAG*.jpg ;
-	do mv "${m}" "${c}"-"$(echo "${m}" | sed 's/.*_//g' )"
-	done
-	rm "${c}";
+  for m in ./*IMAG*.jpg ;
+  do mv "${m}" "${c}"-"$(echo "${m}" | sed 's/.*_//g' )"
+  done
+  rm "${c}";
 	echo "$(date +%c)" "${c}/${end} downloaded";
 	((c++));
 done;
+
 # padding 0 for numerical file sorting
 # cut no.
 c=${begin};
 for f in *.jpg;
-do case $f in
-	*-[0-9].jpg ) mv "${f}" "$(echo "${f}" | sed 's/-/-000/')";;
-	*-[0-9][0-9].jpg ) mv "${f}" "$(echo "${f}" | sed 's/-/-00/')";;
-	*-[0-9][0-9][0-9].jpg ) mv "${f}" "$(echo "${f}" | sed 's/-/-0/')";;
-esac
+  do case "$f" in
+    *-[0-9].jpg ) echo mv "${f}" "${f//-/-000}";;
+    *-[0-9][0-9].jpg ) echo mv "${f}" "${f//-/-00}";;
+    *-[0-9][0-9][0-9].jpg ) echo mv "${f}" "${f//-/-0}";;
+  esac
 done
+
 if [[ ${pdf} == "PDF" ]] || [[ ${pdf} == 1 ]]; then
 	if [[ ! -d "pdf" ]]; then
 		mkdir ./pdf;
@@ -182,7 +190,7 @@ if [[ ! -d "img" ]]; then
 fi
 for f in *.jpg;
 do case $f in
-	[0-9]-*.jpg ) mv "${f}" "$(echo "${f}" | sed 's/^/000/')";;                   
+	[0-9]-*.jpg ) mv "${f}" "$(echo "${f}" | sed 's/^/000/')";;
 	[0-9][0-9]-*.jpg ) mv "${f}" "$(echo "${f}" | sed 's/^/00/')";;
 	[0-9][0-9][0-9]-*.jpg ) mv "${f}" "$(echo "${f}" | sed 's/^/0/')";;
 esac
