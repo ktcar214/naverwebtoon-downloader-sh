@@ -19,13 +19,13 @@ while((${c}<=${end}));
 do export bgmurl="$(wget -qO- "https://m.comic.naver.com/webtoon/detail.nhn?titleId="${titleid}"&no="${c}"" | grep bgmUrl | sed  "s/'//g" | sed "s/bgmUrl: //" | sed "s/,//" | sed 's/^[ \t]*//')"
 	#echo ${bgmurl}
 	if [[ -z ${bgmurl} ]]; then
-		echo no bgm in title no.${c} out of ${end}
+		echo no bgm found in title no.${c} out of ${end}
 		((c++))
 		continue;
 	fi
 	wget  --quiet\
 		-U "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0"\
 		-O "${name}"-"${c}".mp3 "https://image-comic.pstatic.net"${bgmurl}""
-	echo bgm for ${c} downloaded
+	echo bgm for title no. ${c} downloaded. ${c}/${end}
 	((c++))
 done
