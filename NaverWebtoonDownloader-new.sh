@@ -15,10 +15,18 @@ if [[ ${1} == "--help" ]] || [[ ${1} == "-h" ]] || [[ -z "${1}" ]]; then
 	echo "-p (--pdf) : generate pdf using downloaded images. Required : img2pdf."
 	echo "-c (--compress) : generate compressed archive files. Required : 7z (p7zip)"
 	echo "output : ./img/(downloaded webtoon.jpg(s)), ./pdf/(generated pdf(s).pdf), ./(comic name).log (wget log), ../(comic name).7z"
-	exit;
+	echo "Exit status: 0(success), 99(Unknown Variable)"
+	echo "Example: ./Naverwebtoondownloader.sh -t 000000"
+	exit 0;
 fi
 
+#set variables with default
+export begin=1
+export end="end"
+export pdf=0
+export compress=0
 
+# set variables from arguments
 while [[ $# -gt 0 ]]
 do
 key="$1"
@@ -61,7 +69,7 @@ case $key in
     ;;
     *)    # unknown option
     echo "Unknown Option: " "$1" # save it in an array for later
-    shift # past argument
+    exit 99
     ;;
 esac
 done
@@ -74,8 +82,9 @@ done
 #export pdf="${6}"
 #export compress="${7}"
 
+
 #retrieve end point
-if [[ ${end} == "end" ]]; then
+if [[ ${end} == "end" ]] || [[ -z ${end} ]]; then
 end=$(wget -qO- "https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}" \
 		| grep "/webtoon/detail.nhn?titleId=${titleid}&no=" \
 		| head -n 1 | sed 's/<a href="\/webtoon\/detail.nhn?//' \
