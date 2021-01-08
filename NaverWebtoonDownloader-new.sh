@@ -94,6 +94,14 @@ end=$(wget -qO- "https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}" 
 export end
 fi
 
+if wget -qO- "https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}" | grep -q ico_cut
+then
+  cut=1
+	export cut
+	else
+	  cut=0
+		export cut
+fi
 #retrieve the comic title from naver
 name=$(wget -qO- 'https://comic.naver.com/webtoon/list.nhn?titleId='"${titleid}" \
 	| perl -l -0777 -ne 'print $1 if /<title.*?>\s*(.*?)(?: :: 네이버 만화)?\s*<\/title/si')
@@ -127,26 +135,43 @@ echo pdf: "${pdf}"
 echo begin point: "${begin}"
 echo end: "${end}"
 echo compress: "${compress}"
+echo cut toon: "${cut}"
 echo ====================BEGIN======================
 
 #filter comic detail URLs
 c=${begin};
+if [[ $cut == 0 ]]; then
 while((c<=end));
 do echo "https://comic.naver.com/webtoon/detail.nhn?titleId=${titleid}&no=""${c}" >> down.txt;
 	((c++));
 done;
-
 # make download list using sed & grep
 c=${begin};
 while read -r p;
 do wget --quiet -U mozilla -nv -O temp_"$c" "$p";
-	grep "comic content" temp_''"$c"'' | sed "s/<img src=\"//" | sed "s/\".*//" | sed 's/^[ \t]*//' >> ''"$c"'';
+	grep "comic content" temp_"$c" | grep -Eo "https.*.jpg" >> "$c";
 	#	grep "comic content" temp_''"$c"'' | sed "s/<img src=\"//" | sed "s/\.gif.*/.gif/" | sed 's/^[ \t]*//' >> ''"$c"'';
 	echo "$(date +%c)" link creation: "${c}" out of "${end}"
 	((c++));
 done<down.txt;
 rm down.txt temp*;
 echo "$(date +%c)" "create link complete";
+else
+while((c<=end));
+do echo "https://m.comic.naver.com/webtoon/detail.nhn?titleId=${titleid}&no=""${c}" >> down.txt;
+	((c++));
+done;
+# make download list using sed & grep
+c=${begin};
+while read -r p;
+do wget --quiet -U mozilla -nv -O temp_"$c" "$p";
+	grep mobilewebimg temp_"$c" | grep -Eo "https.*.jpg" >> "$c";
+	echo "$(date +%c)" link creation: "${c}" out of "${end}"
+	((c++));
+done<down.txt;
+rm down.txt temp*;
+echo "$(date +%c)" "create link complete";
+fi
 #download images
 c=${begin};
 while((c<=end));
@@ -168,18 +193,18 @@ done;
 
 # padding 0 for numerical file sorting
 # cut no.
-c=${begin};
 for f in *.jpg;
   do case "$f" in
-    *-[0-9].jpg ) echo mv "${f}" "${f//-/-000}";;
-    *-[0-9][0-9].jpg ) echo mv "${f}" "${f//-/-00}";;
-    *-[0-9][0-9][0-9].jpg ) echo mv "${f}" "${f//-/-0}";;
+    *-[0-9].jpg ) mv "${f}" "${f//-/-000}";;
+    *-[0-9][0-9].jpg ) mv "${f}" "${f//-/-00}";;
+    *-[0-9][0-9][0-9].jpg ) mv "${f}" "${f//-/-0}";;
   esac
 done
 
 if [[ ${pdf} == "PDF" ]] || [[ ${pdf} == 1 ]]; then
 	if [[ ! -d "pdf" ]]; then
 		mkdir ./pdf;
+		c=${begin};
 	fi
 	while((c<=end));
 	do img2pdf "${c}"-*.jpg --output "$c".pdf; 
