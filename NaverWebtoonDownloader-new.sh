@@ -25,7 +25,7 @@ export begin=1
 export end="end"
 export pdf=0
 export compress=0
-export pdf-aio=0
+export pdf_aio=0
 
 # set variables from arguments
 while [[ $# -gt 0 ]]
@@ -65,7 +65,7 @@ case $key in
     ;;
     --pdf-aio)
     pdf=1
-    pdf-aio=1
+    pdf_aio=1
     shift
     shift
     ;;
@@ -130,7 +130,7 @@ echo location: "$(pwd)"
 echo webtoon titleID: "${titleid}"
 echo webtoon name: "${name}"
 echo pdf: "${pdf}"
-echo PDF all in one file: "${pdf-aio}"
+echo PDF all in one file: "${pdf_aio}"
 echo begin point: "${begin}"
 echo end: "${end}"
 echo compress: "${compress}"
@@ -200,7 +200,7 @@ for f in *.jpg;
   esac
 done
 
-if [[ ${pdf} == 1 ]] && [[ ${pdf-aio} != 1 ]]; then
+if [[ ${pdf} == 1 ]] && [[ ${pdf_aio} != 1 ]]; then
 	if [[ ! -d "pdf" ]]; then
 		mkdir ./pdf;
 	fi
@@ -229,7 +229,7 @@ do case $f in
 esac
 done
 
-if [[ ${pdf-aio} == 1 ]]; then
+if [[ ${pdf_aio} == 1 ]]; then
 	  echo "generating PDF (All in One file)"
 	  img2pdf ./*.jpg --output "${name}".pdf
 fi
@@ -245,7 +245,7 @@ echo location: "$(pwd)"
 echo webtoon titleID: "${titleid}"
 echo webtoon name: "${name}"
 echo pdf: "${pdf}"
-echo PDF all in one file: "${pdf-aio}"
+echo PDF all in one file: "${pdf_aio}"
 echo begin point: "${begin}"
 echo end: "${end}"
 echo compressed: "${compress}"
