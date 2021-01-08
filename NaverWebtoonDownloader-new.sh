@@ -13,8 +13,8 @@ if [[ ${1} == "--help" ]] || [[ ${1} == "-h" ]] || [[ -z "${1}" ]]; then
 	echo "-l (--location) : location of saved files. Default: current directory, with --subfolder switch on"
 	echo "--subfolder : generate subfolder with the name of the targeted webtoon and save files in that folder."
 	echo "-p (--pdf) : generate pdf using downloaded images. Required : img2pdf."
+	echo "--pdf-aio: generate pdf, but in one file. All comic images will be included, without being divided into chapter."
 	echo "-c (--compress) : generate compressed archive files. Required : 7z (p7zip)"
-	echo "output : ./img/(downloaded webtoon.jpg(s)), ./pdf/(generated pdf(s).pdf), ./(comic name).log (wget log), ../(comic name).7z"
 	echo "Exit status: 0(success), 99(Unknown Variable)"
 	echo "Example: ./Naverwebtoondownloader.sh -t 000000"
 	exit 0;
@@ -25,6 +25,7 @@ export begin=1
 export end="end"
 export pdf=0
 export compress=0
+export pdf-aio=0
 
 # set variables from arguments
 while [[ $# -gt 0 ]]
@@ -62,6 +63,12 @@ case $key in
     shift
     shift
     ;;
+    --pdf-aio)
+    pdf=1
+    pdf-aio=1
+    shift
+    shift
+    ;;
     -c|-compress)
     compress=1
     shift
@@ -73,15 +80,6 @@ case $key in
     ;;
 esac
 done
-
-#export titleid="${1}"
-#export begin="${2}"
-#export end="${3}"
-#export folder="${4}"
-#export foldername_autogen="${5}"
-#export pdf="${6}"
-#export compress="${7}"
-
 
 #retrieve end point
 if [[ ${end} == "end" ]] || [[ -z ${end} ]]; then
@@ -132,6 +130,7 @@ echo location: "$(pwd)"
 echo webtoon titleID: "${titleid}"
 echo webtoon name: "${name}"
 echo pdf: "${pdf}"
+echo PDF all in one file: "${pdf-aio}"
 echo begin point: "${begin}"
 echo end: "${end}"
 echo compress: "${compress}"
@@ -201,11 +200,11 @@ for f in *.jpg;
   esac
 done
 
-if [[ ${pdf} == "PDF" ]] || [[ ${pdf} == 1 ]]; then
+if [[ ${pdf} == 1 ]] && [[ ${pdf-aio} != 1 ]]; then
 	if [[ ! -d "pdf" ]]; then
 		mkdir ./pdf;
-		c=${begin};
 	fi
+  c=${begin};
 	while((c<=end));
 	do img2pdf "${c}"-*.jpg --output "$c".pdf; 
 		echo "PDF: ${c}/${end} complete"
@@ -229,6 +228,12 @@ do case $f in
 	[0-9][0-9][0-9]-*.jpg ) mv "${f}" "$(echo "${f}" | sed 's/^/0/')";;
 esac
 done
+
+if [[ ${pdf-aio} == 1 ]]; then
+	  echo "generating PDF (All in One file)"
+	  img2pdf ./*.jpg --output "${name}".pdf
+fi
+
 mv ./*.jpg ./img;
 if [[ ${compress} == 1 ]]; then
 	echo compressing using 7z
@@ -240,6 +245,7 @@ echo location: "$(pwd)"
 echo webtoon titleID: "${titleid}"
 echo webtoon name: "${name}"
 echo pdf: "${pdf}"
+echo PDF all in one file: "${pdf-aio}"
 echo begin point: "${begin}"
 echo end: "${end}"
 echo compressed: "${compress}"
