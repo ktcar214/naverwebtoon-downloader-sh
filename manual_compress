@@ -1,0 +1,6 @@
+#!/bin/bash
+#compress each directory in target directory
+#run in your webtoon folder
+for a in */
+do 7z a ./"$(echo "${a}" | sed 's/\///')".7z "${a}"
+done
