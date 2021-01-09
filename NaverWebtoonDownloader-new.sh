@@ -15,6 +15,7 @@ if [[ ${1} == "--help" ]] || [[ ${1} == "-h" ]] || [[ -z "${1}" ]]; then
 	echo "-p (--pdf) : generate pdf using downloaded images. Required : img2pdf."
 	echo "--pdf-aio: generate pdf, but in one file. All comic images will be included, without being divided into chapter."
 	echo "-c (--compress) : generate compressed archive files. Required : 7z (p7zip)"
+	echo "--force-pc: Use images from PC version regardelss of comic format."
 	echo "Exit status: 0(success), 99(Unknown Variable)"
 	echo "Example: ./Naverwebtoondownloader.sh -t 000000"
 	exit 0;
@@ -26,6 +27,7 @@ export end="end"
 export pdf=0
 export compress=0
 export pdf_aio=0
+export cut=0
 
 # set variables from arguments
 while [[ $# -gt 0 ]]
@@ -74,6 +76,11 @@ do
 		shift
 		shift
 		;;
+  --force-pc)
+    force_pc=1
+    shift
+    shift
+    ;;
 	*)    # unknown option
 		echo "Unknown Option: " "$1" # save it in an array for later
 		exit 99
@@ -94,11 +101,10 @@ fi
 
 if wget -qO- "https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}" | grep -q ico_cut
 then
+	if [[ ${force_pc} != 1 ]]; then
 	cut=1
 	export cut
-else
-	cut=0
-	export cut
+  fi
 fi
 #retrieve the comic title from naver
 name=$(wget -qO- 'https://comic.naver.com/webtoon/list.nhn?titleId='"${titleid}" \
@@ -114,7 +120,6 @@ if [[ ${foldername_autogen} == 1 ]] && [[ -n "${folder}" ]] && [[ "${folder}" !=
 		mkdir "$folder"/"$name"
 		cd "$folder"/"$name" || exit;
 	fi
-
 elif [[ -z "${folder}" ]] || [[ "${folder}" == "default" ]]; then
 	mkdir "$name" 
 	cd "$name" || exit
