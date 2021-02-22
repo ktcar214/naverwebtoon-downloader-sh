@@ -91,8 +91,7 @@ done
 #retrieve webtoon info
 echo verifying titleId and retrieving some metadata...
 wget -q -O./."${titleid}"_naverwebtoondownloadersh-temp.html \
-"https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}"
-
+"https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}" || { echo "Invalid titleId. Returned to main page." ; exit 1; }
 
 #retrieve end point
 if [[ ${end} == "end" ]] || [[ -z ${end} ]]; then
