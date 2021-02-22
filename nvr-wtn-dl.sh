@@ -157,7 +157,7 @@ if [[ $cut == 0 ]]; then
 	# make download list using sed & grep
 do wget --quiet -U mozilla -nv \
 -O- "https://comic.naver.com/webtoon/detail.nhn?titleId=${titleid}&no=""${c}"| \
-		grep "comic content" temp_"$c" | grep -Eo "https.*.jpg" >> .image_dl_"$c".list;
+		grep "comic content" | grep -Eo "https.*.jpg" >> .image_dl_"$c".list;
 		#	grep "comic content" temp_''"$c"'' | sed "s/<img src=\"//" | sed "s/\.gif.*/.gif/" | sed 's/^[ \t]*//' >> ''"$c"'';
 		echo "$(date +%c)" link creation: "${c}" out of "${end}"
   ((c++));
@@ -167,7 +167,7 @@ else
 	while((c<=end));
 	do wget --quiet -U mozilla -nv \
 	-O- "https://m.comic.naver.com/webtoon/detail.nhn?titleId=${titleid}&no=""${c}"| \
-		grep mobilewebimg temp_"$c" | grep -Eo "https.*.jpg" >> .image_dl_"$c".list
+		grep mobilewebimg | grep -Eo "https.*.jpg" >> .image_dl_"$c".list
 		echo "$(date +%c)" link creation: "${c}" out of "${end}"
 		((c++));
 	done;
