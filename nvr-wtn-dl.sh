@@ -6,7 +6,7 @@
 
 ##help
 if [[ ${1} == "--help" ]] || [[ ${1} == "-h" ]] || [[ -z "${1}" ]]; then
-	echo "usage: Naverwebtoondownloader.sh -t titleId -b START -e END(end) -l Folder(default) --subfolder --pdf --compress"
+	echo "usage: nvr-wtn-dl.sh -t titleId -b START -e END(end) -l Folder(default) --subfolder --pdf --compress"
 	echo "-t (--titleid) : title ID of the target webtoon."
 	echo "-b (--begin) : beginning point. default : 1"
 	echo "-e (--end) : ending point. Program will find out last chapter no. by default, so you can download from your beginning point to the last one."
@@ -17,7 +17,7 @@ if [[ ${1} == "--help" ]] || [[ ${1} == "-h" ]] || [[ -z "${1}" ]]; then
 	echo "-c (--compress) : generate compressed archive files. Required : 7z (p7zip)"
 	echo "--force-pc: Use images from PC version regardelss of comic format."
 	echo "Exit status: 0(success), 99(Unknown Variable)"
-	echo "Example: ./Naverwebtoondownloader.sh -t 000000"
+	echo "Example: ./nvr-wtn-dl.sh -t 000000"
 	exit 0;
 fi
 
@@ -89,7 +89,7 @@ esac
 done
 
 #retrieve webtoon info
-echo verifying titleId and other parameters...
+echo verifying titleId and retrieving some metadata...
 wget -q -O./."${titleid}"_naverwebtoondownloadersh-temp.html \
 "https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}"
 
@@ -220,15 +220,15 @@ if [[ ${pdf} == 1 ]] && [[ ${pdf_aio} != 1 ]]; then
 		((c++));
 	done
 	for f in [0-9].pdf;
-	do mv "$f" $(printf %02d%s "${f%.*}" "${a##*.}").pdf;
+	do mv "$f" "$(printf %02d%s "${f%.*}" "${a##*.}")".pdf;
 	done;
 fi
 # clean up
 for f in ./*.jpg;
 do case $f in
-	[0-9]-*.jpg ) mv "${f}" "$(echo 000"${f}")";;
-	[0-9][0-9]-*.jpg ) mv "${f}" "$(echo 00"${f}")";;
-	[0-9][0-9][0-9]-*.jpg ) mv "${f}" "$(echo 0"${f}")";;
+	[0-9]-*.jpg ) mv "${f}" 000"${f}";;
+	[0-9][0-9]-*.jpg ) mv "${f}" 00"${f}";;
+	[0-9][0-9][0-9]-*.jpg ) mv "${f}" 0"${f}";;
 esac
 done
 
