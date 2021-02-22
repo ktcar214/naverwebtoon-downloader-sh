@@ -82,7 +82,7 @@ do
     shift
     ;;
 	*)    # unknown option
-		echo "Unknown Option: " "$1" # save it in an array for later
+		echo "Unknown Option: " "$1"
 		exit 99
 		;;
 esac
@@ -90,8 +90,13 @@ done
 
 #retrieve webtoon info
 echo verifying titleId and retrieving some metadata...
-wget -q -O./."${titleid}"_naverwebtoondownloadersh-temp.html \
-"https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}" || { echo "Invalid titleId. Returned to main page." ; exit 1; }
+if [[ -z $titleid ]]; then
+  echo "Error: No titleId. use -t or --titleid to set target."
+  exit 1
+fi
+wget -q --max-redirect=0 -O./."${titleid}"_naverwebtoondownloadersh-temp.html \
+"https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}" \
+|| { echo "Error: Invalid titleId." ; rm ."${titleid}"_naverwebtoondownloadersh-temp.html ; exit 2; }
 
 #retrieve end point
 if [[ ${end} == "end" ]] || [[ -z ${end} ]]; then
