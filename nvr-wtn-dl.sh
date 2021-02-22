@@ -96,7 +96,8 @@ if [[ -z $titleid ]]; then
 fi
 wget -q --max-redirect=0 -O./."${titleid}"_naverwebtoondownloadersh-temp.html \
 "https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}" \
-|| { echo "Error: Invalid titleId." ; rm ."${titleid}"_naverwebtoondownloadersh-temp.html ; exit 2; }
+|| { echo "Error: Invalid titleId. or I/O failure"; echo "Double check whether titleid is correct and whether there's enough space or permission to write on." \
+; rm ."${titleid}"_naverwebtoondownloadersh-temp.html ; exit 2; }
 
 #retrieve end point
 if [[ ${end} == "end" ]] || [[ -z ${end} ]]; then
@@ -107,7 +108,7 @@ end=$(grep "/webtoon/detail.nhn?titleId=${titleid}&no="  ."${titleid}"_naverwebt
 	| sed 's/^[ \t]*//')
 	export end
 fi
-
+#determine cut toon
 if grep -q ico_cut ."${titleid}"_naverwebtoondownloadersh-temp.html
 then
 	if [[ ${force_pc} != 1 ]]; then
@@ -115,7 +116,7 @@ then
 	export cut
   fi
 fi
-#retrieve the comic title from naver
+#retrieve the comic title
 name=$(grep "<title>" ."${titleid}"_naverwebtoondownloadersh-temp.html | sed -e "s/.*<title>\(.*\)\ ::.*/\1/g")
 export name
 
@@ -123,17 +124,17 @@ export name
 if [[ ${foldername_autogen} == 1 ]] && [[ -n "${folder}" ]] && [[ "${folder}" != "default" ]]; then
 	if [[ ${folder} == */ ]]; then
 		mkdir "$folder""$name" 
-		cd "$folder""$name" || exit;
+		cd "$folder""$name" || { echo "Error: cannot create directory" ; echo "Do you have enough space or permission to write on target directory?" ; exit 3; };
 	else
 		mkdir "$folder"/"$name"
-		cd "$folder"/"$name" || exit;
+		cd "$folder"/"$name" || { echo "Error: cannot create directory" ; echo "Do you have enough space or permission to write on target directory?" ; exit 3; };
 	fi
 elif [[ -z "${folder}" ]] || [[ "${folder}" == "default" ]]; then
 	mkdir "$name" 
-	cd "$name" || exit
+	cd "$name" || { echo "Error: cannot create directory" ; echo "Do you have enough space or permission to write on target directory?" ; exit 3; }
 else
 	mkdir "$folder" 
-	cd "$folder" || exit
+	cd "$folder" || { echo "Error: cannot create directory" ; echo "Do you have enough space or permission to write on target directory?" ; exit 3; }
 fi
 
 # download html
@@ -178,7 +179,7 @@ fi
 if [[ ! -d "img" ]]; then
 	mkdir ./img;
 fi
-cd img || exit
+cd img || { echo "Error: cannot create directory" ; echo "Do you have enough space or permission to write on target directory?" ; exit 3; }
 c=${begin};
 while((c<=end));
 do wget -U "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0" \
@@ -187,7 +188,7 @@ do wget -U "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:78.0) Gecko/20100101 Fire
 	--timeout=0.5 \
 	--waitretry=0 \
 	--tries=30 \
-	-a ./"${name}"-download.log \
+	-a ../"${name}"-download.log \
 	-i ../.image_dl_"${c}".list;
 	if [[ ${cut} == 0 ]]; then
 		for m in ./*IMAG*.jpg ;
@@ -198,7 +199,7 @@ do wget -U "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:78.0) Gecko/20100101 Fire
 		do mv "${m}" "${c}"-"${m//*_/}"
 		done
 	fi
-	rm "${c}";
+	rm ../.image_dl_"${c}".list;
 	echo "$(date +%c)" "${c}/${end} downloaded";
 	((c++));
 done;
@@ -223,6 +224,7 @@ if [[ ${pdf} == 1 ]] && [[ ${pdf_aio} != 1 ]]; then
 		echo "PDF: ${c}/${end} complete"
 		((c++));
 	done
+	# shellcheck disable=SC2154
 	for f in [0-9].pdf;
 	do mv "$f" "$(printf %02d%s "${f%.*}" "${a##*.}")".pdf;
 	done;
@@ -241,7 +243,6 @@ if [[ ${pdf_aio} == 1 ]]; then
 	img2pdf ./*.jpg --output ../pdf/"${name}".pdf
 fi
 
-mv ./*.jpg ./img;
 if [[ ${compress} == 1 ]]; then
 	echo compressing using 7z
 	7z a "$(pwd)"/../ -o"$(pwd)"/../../
