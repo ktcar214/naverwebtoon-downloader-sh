@@ -1,5 +1,5 @@
 #! /bin/bash
-## Code refactored by ktcar214. 2020.08.04
+## Code refactored by ktcar214. 2020.08.04~
 ## Original code by nursyah
 ## Original Repo: https://github.com/nursyah21/webtoon-downloader
 ## GNU GPL v3
@@ -35,7 +35,7 @@ do
 	key="$1"
 
 	case $key in
-		-t|--titleID)
+		-t|--titleid)
 			titleid="$2"
 			shift # past argument
 			shift # past value
@@ -88,10 +88,15 @@ do
 esac
 done
 
+#retrieve webtoon info
+echo verifying titleId and other parameters...
+wget -q -O./."${titleid}"_naverwebtoondownloadersh-temp.html \
+"https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}"
+
+
 #retrieve end point
 if [[ ${end} == "end" ]] || [[ -z ${end} ]]; then
-end=$(wget -qO- "https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}" \
-	| grep "/webtoon/detail.nhn?titleId=${titleid}&no=" \
+end=$(grep "/webtoon/detail.nhn?titleId=${titleid}&no="  ."${titleid}"_naverwebtoondownloadersh-temp.html \
 	| head -n 1 | sed 's/<a href="\/webtoon\/detail.nhn?//' \
 	| sed 's/titleId.*&no=//' \
 	| sed 's/&weekday.*//' \
@@ -99,7 +104,7 @@ end=$(wget -qO- "https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}" 
 	export end
 fi
 
-if wget -qO- "https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}" | grep -q ico_cut
+if grep -q ico_cut ."${titleid}"_naverwebtoondownloadersh-temp.html
 then
 	if [[ ${force_pc} != 1 ]]; then
 	cut=1
@@ -107,9 +112,8 @@ then
   fi
 fi
 #retrieve the comic title from naver
-name=$(wget -qO- 'https://comic.naver.com/webtoon/list.nhn?titleId='"${titleid}" \
-	| perl -l -0777 -ne 'print $1 if /<title.*?>\s*(.*?)(?: :: 네이버 만화)?\s*<\/title/si')
-	export name
+name=$(grep "<title>" ."${titleid}"_naverwebtoondownloadersh-temp.html | sed -e "s/.*<title>\(.*\)\ ::.*/\1/g")
+export name
 
 #make folder
 if [[ ${foldername_autogen} == 1 ]] && [[ -n "${folder}" ]] && [[ "${folder}" != "default" ]]; then
@@ -146,37 +150,31 @@ echo ====================BEGIN======================
 c=${begin};
 if [[ $cut == 0 ]]; then
 	while((c<=end));
-	do echo "https://comic.naver.com/webtoon/detail.nhn?titleId=${titleid}&no=""${c}" >> down.txt;
-		((c++));
-	done;
 	# make download list using sed & grep
-	c=${begin};
-	while read -r p;
-	do wget --quiet -U mozilla -nv -O temp_"$c" "$p";
-		grep "comic content" temp_"$c" | grep -Eo "https.*.jpg" >> "$c";
+do wget --quiet -U mozilla -nv \
+-O-"https://comic.naver.com/webtoon/detail.nhn?titleId=${titleid}&no=""${c}"| \
+		grep "comic content" temp_"$c" | grep -Eo "https.*.jpg" >> .image_dl_"$c".list;
 		#	grep "comic content" temp_''"$c"'' | sed "s/<img src=\"//" | sed "s/\.gif.*/.gif/" | sed 's/^[ \t]*//' >> ''"$c"'';
 		echo "$(date +%c)" link creation: "${c}" out of "${end}"
-		((c++));
-	done<down.txt;
-	rm down.txt temp*;
-	echo "$(date +%c)" "create link complete";
+  ((c++));
+	done
+	echo "$(date +%c)" "link creation complete";
 else
 	while((c<=end));
-	do echo "https://m.comic.naver.com/webtoon/detail.nhn?titleId=${titleid}&no=""${c}" >> down.txt;
-		((c++));
-	done;
-	# make download list using sed & grep
-	c=${begin};
-	while read -r p;
-	do wget --quiet -U mozilla -nv -O temp_"$c" "$p";
-		grep mobilewebimg temp_"$c" | grep -Eo "https.*.jpg" >> "$c";
+	do wget --quiet -U mozilla -nv \
+	-O- "https://m.comic.naver.com/webtoon/detail.nhn?titleId=${titleid}&no=""${c}"| \
+		grep mobilewebimg temp_"$c" | grep -Eo "https.*.jpg" >> .image_dl_"$c".list
 		echo "$(date +%c)" link creation: "${c}" out of "${end}"
 		((c++));
-	done<down.txt;
-	rm down.txt temp*;
+	done;
 	echo "$(date +%c)" "create link complete";
 fi
+
 #download images
+if [[ ! -d "img" ]]; then
+	mkdir ./img;
+fi
+cd img || exit
 c=${begin};
 while((c<=end));
 do wget -U "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0" \
@@ -186,14 +184,14 @@ do wget -U "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:78.0) Gecko/20100101 Fire
 	--waitretry=0 \
 	--tries=30 \
 	-a ./"${name}"-download.log \
-	-i "${c}";
+	-i ../.image_dl_"${c}".list;
 	if [[ ${cut} == 0 ]]; then
 		for m in ./*IMAG*.jpg ;
-		do mv "${m}" "${c}"-"$(echo "${m}" | sed 's/.*_//g' )"
+		do mv "${m}" "${c}"-"${m//*_/}"
 		done
 	else
 		for m in *_*.jpg ;
-		do mv "${m}" "${c}"-"$(echo "${m}" | sed 's/.*_//g' )"
+		do mv "${m}" "${c}"-"${m//*_/}"
 		done
 	fi
 	rm "${c}";
@@ -213,42 +211,36 @@ done
 
 if [[ ${pdf} == 1 ]] && [[ ${pdf_aio} != 1 ]]; then
 	if [[ ! -d "pdf" ]]; then
-		mkdir ./pdf;
+		mkdir ../pdf;
 	fi
 	c=${begin};
 	while((c<=end));
-	do img2pdf "${c}"-*.jpg --output "$c".pdf; 
+	do img2pdf "${c}"-*.jpg --output ../pdf/"$c".pdf;
 		echo "PDF: ${c}/${end} complete"
 		((c++));
 	done
 	for f in [0-9].pdf;
 	do mv "$f" $(printf %02d%s "${f%.*}" "${a##*.}").pdf;
 	done;
-	echo "$(date +%c)" "moving pdf"
-	mv ./*.pdf ./pdf/
 fi
 # clean up
-echo "cleaning up images"
-if [[ ! -d "img" ]]; then
-	mkdir ./img;
-fi
-for f in *.jpg;
+for f in ./*.jpg;
 do case $f in
-	[0-9]-*.jpg ) mv "${f}" "$(echo "${f}" | sed 's/^/000/')";;
-	[0-9][0-9]-*.jpg ) mv "${f}" "$(echo "${f}" | sed 's/^/00/')";;
-	[0-9][0-9][0-9]-*.jpg ) mv "${f}" "$(echo "${f}" | sed 's/^/0/')";;
+	[0-9]-*.jpg ) mv "${f}" "$(echo 000"${f}")";;
+	[0-9][0-9]-*.jpg ) mv "${f}" "$(echo 00"${f}")";;
+	[0-9][0-9][0-9]-*.jpg ) mv "${f}" "$(echo 0"${f}")";;
 esac
 done
 
 if [[ ${pdf_aio} == 1 ]]; then
 	echo "generating PDF (All in One file)"
-	img2pdf ./*.jpg --output "${name}".pdf
+	img2pdf ./*.jpg --output ../pdf/"${name}".pdf
 fi
 
 mv ./*.jpg ./img;
 if [[ ${compress} == 1 ]]; then
 	echo compressing using 7z
-	7z a "$(pwd)" -o"$(pwd)"/../
+	7z a "$(pwd)"/../ -o"$(pwd)"/../../
 fi
 echo ====================END====================
 echo end time: "$(date +%c)"
