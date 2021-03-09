@@ -225,7 +225,7 @@ if [[ ${pdf} == 1 ]] && [[ ${pdf_aio} != 1 ]]; then
 		((c++));
 	done
 	# shellcheck disable=SC2154
-	for f in [0-9].pdf;
+	for f in ../pdf/[0-9].pdf;
 	do mv "$f" "$(printf %02d%s "${f%.*}" "${a##*.}")".pdf;
 	done;
 fi
