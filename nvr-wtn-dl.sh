@@ -136,6 +136,7 @@ else
 	mkdir "$folder" 
 	cd "$folder" || { echo "Error: cannot create directory" ; echo "Do you have enough space or permission to write on target directory?" ; exit 3; }
 fi
+rm ../${titleid}"_naverwebtoondownloadersh-temp.html
 
 # download html
 echo ====================BEGIN======================
@@ -203,6 +204,7 @@ do wget -U "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:78.0) Gecko/20100101 Fire
 	echo "$(date +%c)" "${c}/${end} downloaded";
 	((c++));
 done;
+touch .download_complete
 
 # padding 0 for numerical file sorting
 # cut no.
