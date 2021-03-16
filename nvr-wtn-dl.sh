@@ -76,11 +76,16 @@ do
 		shift
 		shift
 		;;
-  --force-pc)
-    force_pc=1
-    shift
-    shift
-    ;;
+	--force-pc)
+		force_pc=1
+		shift
+		shift
+		;;
+	-m|--meta)
+		meta_only=1
+		shift
+		shift
+		;;
 	*)    # unknown option
 		echo "Unknown Option: " "$1"
 		exit 99
@@ -91,13 +96,13 @@ done
 #retrieve webtoon info
 echo verifying titleId and retrieving some metadata...
 if [[ -z $titleid ]]; then
-  echo "Error: No titleId. use -t or --titleid to set target."
-  exit 1
+	echo "Error: No titleId. use -t or --titleid to set target."
+	exit 1
 fi
 wget -q --max-redirect=0 -O./."${titleid}"_naverwebtoondownloadersh-temp.html \
-"https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}" \
-|| { echo "Error: Invalid titleId. or I/O failure"; echo "Double check whether titleid is correct and whether there's enough space or permission to write on." \
-; rm ."${titleid}"_naverwebtoondownloadersh-temp.html ; exit 2; }
+	"https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}" \
+	|| { echo "Error: Invalid titleId. or I/O failure"; echo "Double check whether titleid is correct and whether there's enough space or permission to write on." \
+	; rm ."${titleid}"_naverwebtoondownloadersh-temp.html ; exit 2; }
 
 #retrieve end point
 if [[ ${end} == "end" ]] || [[ -z ${end} ]]; then
@@ -112,9 +117,9 @@ fi
 if grep -q ico_cut ."${titleid}"_naverwebtoondownloadersh-temp.html
 then
 	if [[ ${force_pc} != 1 ]]; then
-	cut=1
-	export cut
-  fi
+		cut=1
+		export cut
+	fi
 fi
 #retrieve the comic title
 name=$(grep "<title>" ."${titleid}"_naverwebtoondownloadersh-temp.html | sed -e "s/.*<title>\(.*\)\ ::.*/\1/g")
@@ -138,41 +143,46 @@ else
 fi
 
 # download html
-echo ====================BEGIN======================
-echo start time: "$(date +%c)"
-echo location: "$(pwd)"
+echo ==========================================
 echo webtoon titleID: "${titleid}"
 echo webtoon name: "${name}"
-echo pdf: "${pdf}"
-echo PDF all in one file: "${pdf_aio}"
 echo begin point: "${begin}"
 echo end: "${end}"
-echo compress: "${compress}"
 echo cut toon: "${cut}"
-echo ====================BEGIN======================
+echo ==========================================
+if [[ $meta_only == 1 ]]; then
+	exit 0
+else
+	echo pdf: "${pdf}"
+	echo location: "$(pwd)"
+	echo start time: "$(date +%c)"
+	echo PDF all in one file: "${pdf_aio}"
+	echo compress: "${compress}"
+	echo ==========================================
+fi
 
 #filter comic detail URLs
 c=${begin};
 if [[ $cut == 0 ]]; then
 	while((c<=end));
-	# make download list using sed & grep
-do wget --quiet -U mozilla -nv \
--O- "https://comic.naver.com/webtoon/detail.nhn?titleId=${titleid}&no=""${c}"| \
-		grep "comic content" | grep -Eo "https.*.jpg" >> .image_dl_"$c".list;
-		#	grep "comic content" temp_''"$c"'' | sed "s/<img src=\"//" | sed "s/\.gif.*/.gif/" | sed 's/^[ \t]*//' >> ''"$c"'';
-		echo "$(date +%c)" link creation: "${c}" out of "${end}"
-  ((c++));
-	done
-	echo "$(date +%c)" "link creation complete";
-else
-	while((c<=end));
+		# make download list using sed & grep
 	do wget --quiet -U mozilla -nv \
-	-O- "https://m.comic.naver.com/webtoon/detail.nhn?titleId=${titleid}&no=""${c}"| \
-		grep mobilewebimg | grep -Eo "https.*.jpg" >> .image_dl_"$c".list
-		echo "$(date +%c)" link creation: "${c}" out of "${end}"
-		((c++));
-	done;
-	echo "$(date +%c)" "create link complete";
+		-O- "https://comic.naver.com/webtoon/detail.nhn?titleId=${titleid}&no=""${c}"| \
+		grep "comic content" | grep -Eo "https.*.jpg" >> .image_dl_"$c".list;
+			#	grep "comic content" temp_''"$c"'' | sed "s/<img src=\"//" | sed "s/\.gif.*/.gif/" | sed 's/^[ \t]*//' >> ''"$c"'';
+			echo "$(date +%c)" link creation: "${c}" out of "${end}"
+			((c++));
+		done
+		echo "$(date +%c)" "link creation complete";
+	else
+		while((c<=end));
+		do wget --quiet -U mozilla -nv \
+			-O- "https://m.comic.naver.com/webtoon/detail.nhn?titleId=${titleid}&no=""${c}"| \
+			grep mobilewebimg | grep -Eo "https.*.jpg" >> .image_dl_"$c".list
+					echo "$(date +%c)" link creation: "${c}" out of "${end}"
+					((c++));
+				done;
+				echo "$(date +%c)" "create link complete";
 fi
 
 #download images
@@ -225,8 +235,8 @@ if [[ ${pdf} == 1 ]] && [[ ${pdf_aio} != 1 ]]; then
 		((c++));
 	done
 	# shellcheck disable=SC2154
-	for f in [0-9].pdf;
-	do mv "$f" "$(printf %02d%s "${f%.*}" "${a##*.}")".pdf;
+	for f in ../pdf/[0-9].pdf;
+	do mv "$f" "${f//..\/pdf\//..\/pdf\/000}";
 	done;
 fi
 # clean up
