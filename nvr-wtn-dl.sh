@@ -124,23 +124,7 @@ fi
 #retrieve the comic title
 name=$(grep "<title>" ."${titleid}"_naverwebtoondownloadersh-temp.html | sed -e "s/.*<title>\(.*\)\ ::.*/\1/g")
 export name
-
-#make folder
-if [[ ${foldername_autogen} == 1 ]] && [[ -n "${folder}" ]] && [[ "${folder}" != "default" ]]; then
-	if [[ ${folder} == */ ]]; then
-		mkdir "$folder""$name" 
-		cd "$folder""$name" || { echo "Error: cannot create directory" ; echo "Do you have enough space or permission to write on target directory?" ; exit 3; };
-	else
-		mkdir "$folder"/"$name"
-		cd "$folder"/"$name" || { echo "Error: cannot create directory" ; echo "Do you have enough space or permission to write on target directory?" ; exit 3; };
-	fi
-elif [[ -z "${folder}" ]] || [[ "${folder}" == "default" ]]; then
-	mkdir "$name" 
-	cd "$name" || { echo "Error: cannot create directory" ; echo "Do you have enough space or permission to write on target directory?" ; exit 3; }
-else
-	mkdir "$folder" 
-	cd "$folder" || { echo "Error: cannot create directory" ; echo "Do you have enough space or permission to write on target directory?" ; exit 3; }
-fi
+rm ."${titleid}"_naverwebtoondownloadersh-temp.html
 
 # download html
 echo ==========================================
@@ -153,6 +137,22 @@ echo ==========================================
 if [[ $meta_only == 1 ]]; then
 	exit 0
 else
+#make folder
+if [[ ${foldername_autogen} == 1 ]] && [[ -n "${folder}" ]] && [[ "${folder}" != "default" ]]; then
+	if [[ ${folder} == */ ]]; then
+		mkdir "$folder""$name"
+		cd "$folder""$name" || { echo "Error: cannot create directory" ; echo "Do you have enough space or permission to write on target directory?" ; exit 3; };
+	else
+		mkdir "$folder"/"$name"
+		cd "$folder"/"$name" || { echo "Error: cannot create directory" ; echo "Do you have enough space or permission to write on target directory?" ; exit 3; };
+	fi
+elif [[ -z "${folder}" ]] || [[ "${folder}" == "default" ]]; then
+	mkdir "$name"
+	cd "$name" || { echo "Error: cannot create directory" ; echo "Do you have enough space or permission to write on target directory?" ; exit 3; }
+else
+	mkdir "$folder"
+	cd "$folder" || { echo "Error: cannot create directory" ; echo "Do you have enough space or permission to write on target directory?" ; exit 3; }
+fi
 	echo pdf: "${pdf}"
 	echo location: "$(pwd)"
 	echo start time: "$(date +%c)"
