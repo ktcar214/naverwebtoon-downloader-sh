@@ -40,6 +40,11 @@ do
 			shift # past argument
 			shift # past value
 			;;
+		--best)
+			best="$2"
+			shift # past argument
+			shift # past value
+			;;
 		-b|--begin)
 			begin="$2"
 			shift # past argument
@@ -99,14 +104,23 @@ if [[ -z $titleid ]]; then
 	echo "Error: No titleId. use -t or --titleid to set target."
 	exit 1
 fi
+#best challenge(a.k.a 베도) or original webtoon
+
+if [[ $best == 1 ]]; then
+  type=bestChallenge
+else
+  type=webtoon
+fi
+
 wget -q --max-redirect=0 -O./."${titleid}"_naverwebtoondownloadersh-temp.html \
-	"https://comic.naver.com/webtoon/list.nhn?titleId=""${titleid}" \
-	|| { echo "Error: Invalid titleId. or I/O failure"; echo "Double check whether titleid is correct and whether there's enough space or permission to write on." \
+	"https://comic.naver.com/${type}/list.nhn?titleId=""${titleid}" \
+	|| { echo "Error: Invalid titleId. or I/O failure"; echo "Double check whether titleid is correct \
+	and whether there's enough space or permission to write on." \
 	; rm ."${titleid}"_naverwebtoondownloadersh-temp.html ; exit 2; }
 
 #retrieve end point
 if [[ ${end} == "end" ]] || [[ -z ${end} ]]; then
-end=$(grep "/webtoon/detail.nhn?titleId=${titleid}&no="  ."${titleid}"_naverwebtoondownloadersh-temp.html \
+end=$(grep "/${type}/detail.nhn?titleId=${titleid}&no="  ."${titleid}"_naverwebtoondownloadersh-temp.html \
 	| head -n 1 | sed 's/<a href="\/webtoon\/detail.nhn?//' \
 	| sed 's/titleId.*&no=//' \
 	| sed 's/&weekday.*//' \
@@ -167,7 +181,7 @@ if [[ $cut == 0 ]]; then
 	while((c<=end));
 		# make download list using sed & grep
 	do wget --quiet -U mozilla -nv \
-		-O- "https://comic.naver.com/webtoon/detail.nhn?titleId=${titleid}&no=""${c}"| \
+		-O- "https://comic.naver.com/${type}/detail.nhn?titleId=${titleid}&no=""${c}"| \
 		grep "comic content" | grep -Eo "https.*.jpg" >> .image_dl_"$c".list;
 			#	grep "comic content" temp_''"$c"'' | sed "s/<img src=\"//" | sed "s/\.gif.*/.gif/" | sed 's/^[ \t]*//' >> ''"$c"'';
 			echo "$(date +%c)" link creation: "${c}" out of "${end}"
@@ -177,7 +191,7 @@ if [[ $cut == 0 ]]; then
 	else
 		while((c<=end));
 		do wget --quiet -U mozilla -nv \
-			-O- "https://m.comic.naver.com/webtoon/detail.nhn?titleId=${titleid}&no=""${c}"| \
+			-O- "https://m.comic.naver.com/${type}/detail.nhn?titleId=${titleid}&no=""${c}"| \
 			grep mobilewebimg | grep -Eo "https.*.jpg" >> .image_dl_"$c".list
 					echo "$(date +%c)" link creation: "${c}" out of "${end}"
 					((c++));
