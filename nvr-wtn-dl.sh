@@ -41,7 +41,7 @@ do
 			shift # past value
 			;;
 		--best)
-			best="$2"
+			best=1
 			shift # past argument
 			shift # past value
 			;;
@@ -121,7 +121,7 @@ wget -q --max-redirect=0 -O./."${titleid}"_naverwebtoondownloadersh-temp.html \
 #retrieve end point
 if [[ ${end} == "end" ]] || [[ -z ${end} ]]; then
 end=$(grep "/${type}/detail.nhn?titleId=${titleid}&no="  ."${titleid}"_naverwebtoondownloadersh-temp.html \
-	| head -n 1 | sed 's/<a href="\/webtoon\/detail.nhn?//' \
+	| head -n 1 | sed "s/<a href=\"\/${type}\/detail.nhn\?//" \
 	| sed 's/titleId.*&no=//' \
 	| sed 's/&weekday.*//' \
 	| sed 's/^[ \t]*//')
