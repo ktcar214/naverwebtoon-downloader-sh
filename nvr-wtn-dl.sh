@@ -122,7 +122,7 @@ wget -q --max-redirect=0 -O./."${titleid}"_naverwebtoondownloadersh-temp.html \
 if [[ ${end} == "end" ]] || [[ -z ${end} ]]; then
 end=$(grep "/${type}/detail.nhn?titleId=${titleid}&no="  ."${titleid}"_naverwebtoondownloadersh-temp.html \
 	| head -n 1 | sed "s/<a href=\"\/${type}\/detail.nhn\?//" \
-	| sed 's/titleId.*&no=//' \
+	| sed 's/\?titleId.*&no=//' \
 	| sed 's/&weekday.*//' \
 	| sed 's/^[ \t]*//')
 	export end
@@ -182,7 +182,7 @@ if [[ $cut == 0 ]]; then
 		# make download list using sed & grep
 	do wget --quiet -U mozilla -nv \
 		-O- "https://comic.naver.com/${type}/detail.nhn?titleId=${titleid}&no=""${c}"| \
-		grep "comic content" | grep -Eo "https.*.jpg" >> .image_dl_"$c".list;
+		grep "comic content" | grep -Eo "https.*.jpg" >> ${titleid}_"${name}"_"$c".list
 			#	grep "comic content" temp_''"$c"'' | sed "s/<img src=\"//" | sed "s/\.gif.*/.gif/" | sed 's/^[ \t]*//' >> ''"$c"'';
 			echo "$(date +%c)" link creation: "${c}" out of "${end}"
 			((c++));
@@ -192,7 +192,7 @@ if [[ $cut == 0 ]]; then
 		while((c<=end));
 		do wget --quiet -U mozilla -nv \
 			-O- "https://m.comic.naver.com/${type}/detail.nhn?titleId=${titleid}&no=""${c}"| \
-			grep mobilewebimg | grep -Eo "https.*.jpg" >> .image_dl_"$c".list
+			grep mobilewebimg | grep -Eo "https.*.jpg" >> ${titleid}_"${name}"_"$c".list
 					echo "$(date +%c)" link creation: "${c}" out of "${end}"
 					((c++));
 				done;
@@ -202,6 +202,9 @@ fi
 #download images
 if [[ ! -d "img" ]]; then
 	mkdir ./img;
+fi
+if [[ ! -d "url" ]]; then
+	mkdir ./url;
 fi
 cd img || { echo "Error: cannot create directory" ; echo "Do you have enough space or permission to write on target directory?" ; exit 3; }
 c=${begin};
@@ -213,7 +216,8 @@ do wget -U "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:78.0) Gecko/20100101 Fire
 	--waitretry=0 \
 	--tries=30 \
 	-a ../"${name}"-download.log \
-	-i ../.image_dl_"${c}".list;
+	-i ../${titleid}_"${name}"_"$c".list;
+	mv ../${titleid}_"${name}"_"$c".list ../url/
 	if [[ ${cut} == 0 ]]; then
 		for m in ./*IMAG*.jpg ;
 		do mv "${m}" "${c}"-"${m//*_/}"
@@ -223,7 +227,7 @@ do wget -U "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:78.0) Gecko/20100101 Fire
 		do mv "${m}" "${c}"-"${m//*_/}"
 		done
 	fi
-	rm ../.image_dl_"${c}".list;
+	#rm ../.image_dl_"${c}".list;
 	echo "$(date +%c)" "${c}/${end} downloaded";
 	((c++));
 done;
