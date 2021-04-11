@@ -259,7 +259,7 @@ if [[ ${pdf} == 1 ]] && [[ ${pdf_aio} != 1 ]]; then
 	done;
 fi
 # clean up
-for f in ./*.jpg;
+for f in *.jpg;
 do case $f in
 	[0-9]-*.jpg ) mv "${f}" 000"${f}";;
 	[0-9][0-9]-*.jpg ) mv "${f}" 00"${f}";;
