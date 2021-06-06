@@ -257,6 +257,12 @@ if [[ ${pdf} == 1 ]] && [[ ${pdf_aio} != 1 ]]; then
 	for f in ../pdf/[0-9].pdf;
 	do mv "$f" "${f//..\/pdf\//..\/pdf\/000}";
 	done;
+	for f in ../pdf/[0-9][0-9].pdf;
+	do mv "$f" "${f//..\/pdf\//..\/pdf\/00}";
+	done;
+	for f in ../pdf/[0-9][0-9][0-9].pdf;
+	do mv "$f" "${f//..\/pdf\//..\/pdf\/0}";
+	done;
 fi
 # clean up
 for f in *.jpg;
